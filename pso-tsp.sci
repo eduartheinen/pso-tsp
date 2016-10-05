@@ -3,6 +3,9 @@ clc
 
 exec("objectivefn.sci")
 exec("difference.sci")
+exec("permutation.sci")
+exec("pathrelinking.sci")
+exec("removecrossings.sci")
 
 data = fscanfMat("test16.tsp");
 
@@ -26,9 +29,9 @@ v = zeros(particles, r)   //particle's velocity
 x = zeros(particles, r)   //solutions, particles
 
 //weights
-c1 = 0.6
+c1 = 0.8
 c2 = 0.8
-w = 0.4
+w = 0.8
 
 x = grand(particles, "prm", (1:r))    //random initial swarm
 for p=1:particles
@@ -48,73 +51,50 @@ gbestf = pbestf(j)    //best fitness found by all particles
 
 //for i=1:iterations
 for p=1:particles
+  //  x = busca local na particula (hill climbing/delete crossings/2-opt)
+  //  pathrelinking entre pbest e x = posx
+  //  pathrelinking entre gbest e posx = posg
+  //  pathrelinking entre randtour e posg = posr
+
+  x(p,:) = neighborhoodinversion(x(p,:), c1)
+  //x(p,:) = removecrossings(x(p,:), data) //delete crossings - local search
+
   gbestminx = difference(gbestx(1,:), x(p,:))
   pbestminx = difference(pbestx(p,:), x(p,:))
-  randminx = difference(grand(1, "prm", (1:r)), x(p,:))
+  randtour = grand(1, "prm", (1:r))
+  randminx = difference(randtour, x(p,:))
 
   disp(x(p,:), 'x(p):')
   disp(gbestx, 'gbestx:')
+  disp(randtour, 'randtour:')
   disp(gbestminx, 'difference(gbest, x)')
-  disp(pbestminx, 'difference(pbest, x)')
-  disp(randminx, 'difference(rand, x)')
 
   //creating pos_g
-  [transp, c] = size(gbestminx)
-  pos_g(:) = x(p,:)
-
-  if(transp > 1)
-    //reversion
-    if(gbestminx(1,1) < 0)    //case flag is -1 the array is reversed
-      pos_g = flipdim(pos_g, 2)
-    end
-
-    //slides
-    j = gbestminx(1, 2)
-    tmp(:) = pos_g(1:j)
-    pos_g = [pos_g(j+1:$), tmp]
-    disp(pos_g, 'pos_g')
-
-    //transpositions
-    R = grand(1, transp, "def")
-    for t=2:transp
-      j = gbestminx(t,1)
-      k = gbestminx(t,2)
-      tmp = pos_g(j)
-      pos_g(j) = pos_g(k)
-      pos_g(k) = tmp
-    end
-
-    disp(pos_g, 'pos_g after transpositions')
+  if(gbestminx)
+    pos_g = permutation(x(p,:), c1, gbestminx)
+  else
+    pos_g = x(p,:)
   end
+  disp(pos_g, "pos_g:")
 
-  //creating pos_p
-  [transp, c] = size(pbestminx)
-  pos_p(:) = x(p,:)
 
-  if(transp > 1)
-    //reversion
-    if(pbestminx(1,1) < 0)    //case flag is -1 the array is reversed
-      pos_p = flipdim(pos_p, 2)
-    end
-
-    //slides
-    j = pbestminx(1, 2)
-    tmp(:) = pos_p(1:j)
-    pos_g = [pos_p(j+1:$), tmp]
-    disp(pos_p, 'pos_p')
-
-    //transpositions
-    R = grand(1, transp, "def")
-    for t=2:transp
-      j = pbestminx(t,1)
-      k = pbestminx(t,2)
-      tmp = pos_p(j)
-      pos_p(j) = pos_p(k)
-      pos_p(k) = tmp
-    end
-
-    disp(pos_p, 'pos_p after transpositions')
+  disp(pbestminx, 'difference(pbest, x)')
+  //creating pos_g
+  if(pbestminx)
+    pos_p = permutation(x(p,:), c2, pbestminx)
+  else
+    pos_p = x(p,:)
   end
+  disp(pos_p, "pos_p:")
+
+  disp(randminx, 'difference(rand, x)')
+  //creating pos_r
+  if(randminx)
+    pos_r = permutation(randtour, c2, randminx)
+  else
+    pos_r = randtour
+  end
+  disp(pos_r, "pos_r:")
   disp('----i----')
 end
 //end
