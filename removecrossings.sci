@@ -47,10 +47,10 @@ function ans = dointersect(p1, q1, p2, q2)
   end
 endfunction
 
-function a = removecrossings(a, data)
+function a = removecrossings(a, w)
   for i=1:length(a)-3
     for j=i+2:length(a)-1
-      if(dointersect(a(i), a(i+1), a(j), a(j+1)))
+      if(dointersect(a(i), a(i+1), a(j), a(j+1)) & grand(1,"def") > w)
         for k=0:((j-i)/2)-1
           tmp = a(j-k)
           a(j-k) = a(i+k+1)

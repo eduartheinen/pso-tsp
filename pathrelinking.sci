@@ -8,7 +8,7 @@ function [a] = pathrelinking(a, target, w)
 
   for i=2:length(a)
     fita = objectivefn(a)
-    j = find(a(i:$)==target(i))
+    j = find(a==target(i))
     if(grand(1,"def") > w & j > 1 & j ~= [])
       tmp = b(j)
       b(j) = b(i)
